@@ -479,7 +479,7 @@ begin
 					direction_out <= DOWN;
 					state_out <= TRAVELLING;
 					end
-			else if (floor_reg == cur_floor)// Floor requested is Lower
+			else if (floor_reg == cur_floor)// Floor requested is itself
 					begin
 					direction_out <= direction_out;// Open door again
 					state_out <= BUSY;
@@ -491,15 +491,39 @@ begin
 				begin
 					if (floor_reg == 10'b0000000000) //no requested floor
 						state_out <= IDLE; // idle
-					else if (direction_out == UP)
+					else if (direction == UP) // If going up, and any floor_reg is high
 						begin
+						if(floor_reg > cur_floor)
+							begin
 							direction_out <= UP;
 							state_out <= TRAVELLING;
+							end					
+						
+						
+						else if (floor_reg < cur_floor)
+							
+							begin
+							direction_out <= DOWN;
+							state_out <= TRAVELLING;
+							end
 						end
-					else if (floor_reg <cur_floor)
+					else if (direction == DOWN) // If going down
 						begin
-						direction_out <= UP;
-						state_out <= TRAVELLING;
+							if(floor_reg > cur_floor && is_lower)//If lower floor requested
+							begin
+								direction_out <= DOWN;// Keep traveling down
+								state_out <= TRAVELLING;
+							end
+							if(floor_reg > cur_floor && !is_lower )//If lower floor isnt
+							begin
+								direction_out <= UP;//Start to go UP
+								state_out <= TRAVELLING;
+							end
+							if(floor_reg < cur_floor  )//lower requested for sure
+							begin
+								direction_out <= DOWN;//Start to go down
+								state_out <= TRAVELLING;
+							end
 						end
 				end
 			else 
