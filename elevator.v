@@ -7,7 +7,7 @@ output reg [0:6] seg;
 //State truth table//
 parameter IDLE =   2'b01;
 parameter BUSY =   2'b10;
-parameter TRAVELLING =     2'b11;   
+parameter TRAVELING =     2'b11;   
 parameter NULL =   2'b00;
 parameter DOWN = 1'b0;
 parameter UP = 1'b1;
@@ -22,7 +22,7 @@ parameter IDLE_HEX =  7'b1100000;
 always @*
 	begin
 		case (state)
-			TRAVELLING: //0 decimal
+			TRAVELING: //0 decimal
 			begin
 				if(direction == UP)
 				 seg = UP_HEX;
@@ -278,7 +278,7 @@ input rst;
 
 parameter IDLE =   2'b01;
 parameter BUSY =   2'b10;
-parameter TRAVELLING =     2'b11;   
+parameter TRAVELING =     2'b11;   
 parameter NULL =   2'b00;
 parameter DOWN = 1'b0;
 parameter UP = 1'b1;
@@ -294,11 +294,11 @@ always @(posedge CLOCK_1)
 begin
 	if (rst)
 	cur_floor <=  10'b0000000001;
-  else if( state == TRAVELLING && direction == UP) //If state is travelling up
+  else if( state == TRAVELING && direction == UP) //If state is traveling up
     begin
 		cur_floor <= (cur_floor << 1);
     end 
-  else if ( state == TRAVELLING && direction == DOWN) // If state is travelling down
+  else if ( state == TRAVELING && direction == DOWN) // If state is traveling down
     begin
 	 	cur_floor <= (cur_floor >> 1);
     end
@@ -319,7 +319,7 @@ input	CLOCK_1;
 
 parameter IDLE =   2'b01;
 parameter BUSY =   2'b10;
-parameter TRAVELLING =   2'b11;   
+parameter TRAVELING =   2'b11;   
 parameter NULL =   2'b00;
 parameter DOWN = 1'b0;
 parameter UP = 1'b1;
@@ -437,7 +437,7 @@ module	state_controller(CLOCK_50,state,is_lower, rst, busy_clear, direction, flo
 input [2:0] state;
 input [9:0] floor_reg;
 input direction;
-input [14:0] cur_floor;
+input [9:0] cur_floor;
 input	CLOCK_50;
 input busy_clear;
 input rst;
@@ -448,7 +448,7 @@ output reg state_out;
 
 parameter IDLE =   2'b01;
 parameter BUSY =   2'b10;
-parameter TRAVELLING =     2'b11;   
+parameter TRAVELING =     2'b11;   
 parameter NULL =   2'b00;
 parameter DOWN = 1'b0;
 parameter UP = 1'b1;
@@ -472,12 +472,12 @@ begin
 			else if (floor_reg > cur_floor)// Floor requested is higher
 					begin
 					direction_out <= UP;
-					state_out <= TRAVELLING;
+					state_out <= TRAVELING;
 					end
 			else if (floor_reg < cur_floor)// Floor requested is Lower
 					begin
 					direction_out <= DOWN;
-					state_out <= TRAVELLING;
+					state_out <= TRAVELING;
 					end
 			else if (floor_reg == cur_floor)// Floor requested is itself
 					begin
@@ -496,7 +496,7 @@ begin
 						if(floor_reg > cur_floor)
 							begin
 							direction_out <= UP;
-							state_out <= TRAVELLING;
+							state_out <= TRAVELING;
 							end					
 						
 						
@@ -504,7 +504,7 @@ begin
 							
 							begin
 							direction_out <= DOWN;
-							state_out <= TRAVELLING;
+							state_out <= TRAVELING;
 							end
 						end
 					else if (direction == DOWN) // If going down
@@ -512,26 +512,35 @@ begin
 							if(floor_reg > cur_floor && is_lower)//If lower floor requested
 							begin
 								direction_out <= DOWN;// Keep traveling down
-								state_out <= TRAVELLING;
+								state_out <= TRAVELING;
 							end
 							if(floor_reg > cur_floor && !is_lower )//If lower floor isnt
 							begin
 								direction_out <= UP;//Start to go UP
-								state_out <= TRAVELLING;
+								state_out <= TRAVELING;
 							end
 							if(floor_reg < cur_floor  )//lower requested for sure
 							begin
 								direction_out <= DOWN;//Start to go down
-								state_out <= TRAVELLING;
+								state_out <= TRAVELING;
 							end
 						end
 				end
 			else 
 				state_out <= BUSY; //Keep busy till timer clear
 		end
-	TRAVELLING:
+	TRAVELING:
 		begin
-			if((cur_floor ^ floor_reg) ==10'b0000000000) // Last requested floor
+			if((cur_floor[9] & floor_reg[9]) |
+			   (cur_floor[8] & floor_reg[8]) |
+			   (cur_floor[7] & floor_reg[7]) |
+			   (cur_floor[6] & floor_reg[6]) |
+			   (cur_floor[5] & floor_reg[5]) |
+			   (cur_floor[4] & floor_reg[4]) |
+			   (cur_floor[3] & floor_reg[3]) |
+			   (cur_floor[2] & floor_reg[2]) |
+			   (cur_floor[1] & floor_reg[1]) |
+			   (cur_floor[0] & floor_reg[0]) ) //Arrives at requested floor
 				state_out <= BUSY;// opening elevator door
 		end
 		
@@ -713,19 +722,19 @@ begin
 						floor_reg[5] <= 1'b0;
 				10'b0000010000: 
 					if(busy_clear)
-					floor_reg[4] <= 1'b0;
+						floor_reg[4] <= 1'b0;
 				10'b0000001000:
 					if(busy_clear) 
-					floor_reg[3] <= 1'b0;
+						floor_reg[3] <= 1'b0;
 				10'b0000000100:
 					if(busy_clear)
-					floor_reg[2] <= 1'b0;
+						floor_reg[2] <= 1'b0;
 				10'b0000000010: 
-						if(busy_clear)
-					floor_reg[1] <= 1'b0;
+			        if(busy_clear)
+						floor_reg[1] <= 1'b0;
 				10'b0000000001: 
-						if(busy_clear)
-					floor_reg[0] <= 1'b0;
+				    if(busy_clear)
+						floor_reg[0] <= 1'b0;
 			
 		endcase
 		
